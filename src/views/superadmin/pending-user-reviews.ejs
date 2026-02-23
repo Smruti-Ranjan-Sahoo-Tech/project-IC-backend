@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pending User Reviews</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/superadmin-theme.css" />
+</head>
+<body class="sa-body">
+  <div class="sa-app">
+    <aside class="sa-sidebar">
+      <a class="sa-brand" href="/superadmin/dashboard">
+        <span class="sa-brand-icon"><i class="fas fa-crown"></i></span>
+        <span>SuperAdmin</span>
+      </a>
+      <div class="sa-menu-label">Management</div>
+      <ul class="sa-nav">
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/admin-requests"><i class="fas fa-user-check"></i> Admin Requests</a></li>
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/getAllAdminDetails"><i class="fas fa-users"></i> Admin Details</a></li>
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/users"><i class="fas fa-user-group"></i> Users</a></li>
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/enquiries"><i class="fas fa-envelope-open-text"></i> Enquiries</a></li>
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/pending-course-subjects"><i class="fas fa-book-open"></i> Subject Requests</a></li>
+        <li class="sa-nav-item"><a class="sa-link active" href="/superadmin/pending-user-reviews"><i class="fas fa-star-half-alt"></i> User Reviews</a></li>
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/logout"><i class="fas fa-right-from-bracket"></i> Logout</a></li>
+      </ul>
+    </aside>
+
+    <main class="sa-main">
+      <header class="sa-topbar">
+        <div class="sa-search">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Search pending reviews..." />
+        </div>
+        <div class="sa-top-actions">
+          <button class="sa-icon-btn" type="button"><i class="far fa-bell"></i></button>
+          <span class="sa-avatar">S</span>
+        </div>
+      </header>
+
+      <section class="sa-content">
+        <h1 class="sa-page-title">Pending User Reviews</h1>
+        <p class="sa-page-subtitle">Approve quality reviews and reject invalid submissions.</p>
+
+        <div class="row g-3">
+          <div class="col-lg-3">
+            <div class="sa-card">
+              <h5 class="mb-3">Users</h5>
+              <div class="d-grid gap-2">
+                <a href="/superadmin/pending-user-reviews" class="btn <%= !selectedSubmitterEmail ? 'btn-primary' : 'btn-outline-primary' %> btn-sm text-start">All Users</a>
+                <% (submitters || []).forEach(item => { %>
+                  <a
+                    href="/superadmin/pending-user-reviews?submitterEmail=<%= encodeURIComponent(item.email) %>"
+                    class="btn <%= selectedSubmitterEmail === item.email.toLowerCase() ? 'btn-primary' : 'btn-outline-primary' %> btn-sm text-start"
+                  >
+                    <%= item.name %>
+                  </a>
+                <% }) %>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-9">
+        <% if (data && data.length > 0) { %>
+          <div class="sa-table-wrap">
+            <table class="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Course</th>
+                  <th>Subject</th>
+                  <th>Company</th>
+                  <th>Type</th>
+                  <th>Location</th>
+                  <th>Question</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% data.forEach(item => { %>
+                  <tr>
+                    <td><strong><%= item.submitterName %></strong><br><small><%= item.submitterEmail %></small></td>
+                    <td><%= item.cource %></td>
+                    <td><%= item.subject %></td>
+                    <td><%= item.company %></td>
+                    <td><%= item.companyType %></td>
+                    <td><%= item.location %></td>
+                    <td style="max-width: 260px;"><%= item.question %></td>
+                    <td>
+                      <div class="d-flex gap-2 justify-content-center flex-wrap">
+                        <button type="button" class="btn btn-success btn-sm action-btn" data-action="approve" data-id="<%= item._id %>">
+                          <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm action-btn" data-action="reject" data-id="<%= item._id %>">
+                          <i class="fas fa-times"></i> Reject
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <div class="sa-card sa-empty">
+            <i class="fas fa-inbox"></i>
+            <h4>No Pending User Reviews</h4>
+            <p>All user reviews are processed.</p>
+          </div>
+        <% } %>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    document.querySelectorAll('.action-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const action = btn.dataset.action;
+        const id = btn.dataset.id;
+
+        if (action === 'approve') {
+          if (!confirm('Approve this review and publish as a question?')) return;
+          const res = await fetch(`/superadmin/approveUserReview/${id}`, { method: 'PATCH' });
+          if (res.ok) window.location.reload();
+          else alert('Failed to approve review');
+          return;
+        }
+
+        const reason = prompt('Enter rejection reason (optional):', '') || '';
+        if (!confirm('Reject this review?')) return;
+        const res = await fetch(`/superadmin/rejectUserReview/${id}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason })
+        });
+        if (res.ok) window.location.reload();
+        else alert('Failed to reject review');
+      });
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

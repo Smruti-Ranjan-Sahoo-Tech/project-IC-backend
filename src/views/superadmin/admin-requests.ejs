@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Access Requests</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/superadmin-theme.css" />
+</head>
+<body class="sa-body">
+  <div class="sa-app">
+    <aside class="sa-sidebar">
+      <a class="sa-brand" href="/superadmin/dashboard">
+        <span class="sa-brand-icon"><i class="fas fa-crown"></i></span>
+        <span>SuperAdmin</span>
+      </a>
+      <div class="sa-menu-label">Management</div>
+      <ul class="sa-nav">
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+        <li class="sa-nav-item"><a class="sa-link active" href="/superadmin/admin-requests"><i class="fas fa-user-check"></i> Admin Requests</a></li>
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/getAllAdminDetails"><i class="fas fa-users"></i> Admin Details</a></li>
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/users"><i class="fas fa-user-group"></i> Users</a></li>
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/enquiries"><i class="fas fa-envelope-open-text"></i> Enquiries</a></li>
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/pending-course-subjects"><i class="fas fa-book-open"></i> Subject Requests</a></li>
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/pending-user-reviews"><i class="fas fa-star-half-alt"></i> User Reviews</a></li>
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/logout"><i class="fas fa-right-from-bracket"></i> Logout</a></li>
+      </ul>
+    </aside>
+
+    <main class="sa-main">
+      <header class="sa-topbar">
+        <div class="sa-search">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Search requests..." />
+        </div>
+        <div class="sa-top-actions">
+          <button class="sa-icon-btn" type="button"><i class="far fa-bell"></i></button>
+          <span class="sa-avatar">S</span>
+        </div>
+      </header>
+
+      <section class="sa-content">
+        <h1 class="sa-page-title">Admin Access Requests</h1>
+        <p class="sa-page-subtitle">Approve or reject incoming admin onboarding requests.</p>
+
+        <div class="sa-kpi-grid">
+          <article class="sa-card">
+            <p class="sa-kpi-value"><%= data ? data.length : 0 %></p>
+            <p class="sa-kpi-label mb-0">Pending Requests</p>
+          </article>
+        </div>
+
+        <div class="sa-bulk-actions">
+          <form method="POST" action="/superadmin/acceptAllAdminRequest" onsubmit="return confirm('Are you sure you want to accept all requests?');">
+            <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-check-circle me-1"></i> Accept All</button>
+          </form>
+          <form method="POST" action="/superadmin/deleteAllAdminRequest?_method=DELETE" onsubmit="return confirm('Are you sure you want to reject all requests?');">
+            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash me-1"></i> Delete All</button>
+          </form>
+        </div>
+
+        <% if (data && data.length > 0) { %>
+          <div class="sa-table-wrap">
+            <table class="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Course</th>
+                  <th>Phone</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% data.forEach(user => { %>
+                  <tr>
+                    <td><strong><%= user.username %></strong></td>
+                    <td><%= user.email %></td>
+                    <td><%= user.cource %></td>
+                    <td><%= user.phone || 'N/A' %></td>
+                    <td>
+                      <div class="d-flex gap-2 justify-content-center flex-wrap">
+                        <form method="POST" action="/superadmin/acceptAdminRequest/<%= user._id %>" onsubmit="return confirm('Accept this request?');">
+                          <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-check me-1"></i> Accept</button>
+                        </form>
+                        <form method="POST" action="/superadmin/deleteAdminRequest/<%= user._id %>?_method=DELETE" onsubmit="return confirm('Reject this request?');">
+                          <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash me-1"></i> Delete</button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <div class="sa-card sa-empty">
+            <i class="fas fa-inbox"></i>
+            <h4>No Admin Requests</h4>
+            <p>All pending admin requests are processed.</p>
+          </div>
+        <% } %>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

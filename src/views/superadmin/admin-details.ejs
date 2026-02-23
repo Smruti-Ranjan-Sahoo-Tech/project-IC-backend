@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Details</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/superadmin-theme.css" />
+</head>
+<body class="sa-body">
+  <div class="sa-app">
+    <aside class="sa-sidebar">
+      <a class="sa-brand" href="/superadmin/dashboard">
+        <span class="sa-brand-icon"><i class="fas fa-crown"></i></span>
+        <span>SuperAdmin</span>
+      </a>
+      <div class="sa-menu-label">Management</div>
+      <ul class="sa-nav">
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/admin-requests"><i class="fas fa-user-check"></i> Admin Requests</a></li>
+        <li class="sa-nav-item"><a class="sa-link active" href="/superadmin/getAllAdminDetails"><i class="fas fa-users"></i> Admin Details</a></li>
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/users"><i class="fas fa-user-group"></i> Users</a></li>
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/enquiries"><i class="fas fa-envelope-open-text"></i> Enquiries</a></li>
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/pending-course-subjects"><i class="fas fa-book-open"></i> Subject Requests</a></li>
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/pending-user-reviews"><i class="fas fa-star-half-alt"></i> User Reviews</a></li>
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/logout"><i class="fas fa-right-from-bracket"></i> Logout</a></li>
+      </ul>
+    </aside>
+
+    <main class="sa-main">
+      <header class="sa-topbar">
+        <div class="sa-search">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Search admins..." />
+        </div>
+        <div class="sa-top-actions">
+          <button class="sa-icon-btn" type="button"><i class="far fa-bell"></i></button>
+          <span class="sa-avatar">S</span>
+        </div>
+      </header>
+
+      <section class="sa-content">
+        <h1 class="sa-page-title">Admin Details</h1>
+        <p class="sa-page-subtitle">View, freeze/unfreeze, and remove admin accounts.</p>
+
+        <% if (data && data.length > 0) { %>
+          <div class="sa-kpi-grid">
+            <article class="sa-card">
+              <p class="sa-kpi-value"><%= data.length %></p>
+              <p class="sa-kpi-label mb-0">Total Admins</p>
+            </article>
+          </div>
+
+          <div class="sa-table-wrap d-none d-lg-block">
+            <table class="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Course</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% data.forEach((admin) => { %>
+                  <tr>
+                    <td><strong><%= admin.username %></strong></td>
+                    <td><%= admin.email %></td>
+                    <td><%= admin.phone || 'N/A' %></td>
+                    <td><%= admin.cource || 'N/A' %></td>
+                    <td>
+                      <% if (admin.isBlocked) { %>
+                        <span class="badge bg-danger">Frozen</span>
+                      <% } else { %>
+                        <span class="badge bg-success">Active</span>
+                      <% } %>
+                    </td>
+                    <td>
+                      <div class="d-flex gap-2 justify-content-center flex-wrap">
+                        <% if (admin.isBlocked) { %>
+                          <button type="button" class="btn btn-warning btn-sm unfreeze-btn" data-id="<%= admin._id %>">Unfreeze</button>
+                        <% } else { %>
+                          <button type="button" class="btn btn-secondary btn-sm freeze-btn" data-id="<%= admin._id %>">Freeze</button>
+                        <% } %>
+
+                        <form action="/superadmin/adminDelete/<%= admin._id %>" method="DELETE" onsubmit="return confirm('Delete this admin?');">
+                          <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="d-lg-none">
+            <% data.forEach((admin) => { %>
+              <article class="sa-card mb-3">
+                <h5 class="mb-1"><%= admin.username %></h5>
+                <p class="mb-1"><strong>Email:</strong> <%= admin.email %></p>
+                <p class="mb-1"><strong>Phone:</strong> <%= admin.phone || 'N/A' %></p>
+                <p class="mb-2"><strong>Course:</strong> <%= admin.cource || 'N/A' %></p>
+                <p class="mb-2">
+                  <strong>Status:</strong>
+                  <% if (admin.isBlocked) { %>
+                    <span class="badge bg-danger">Frozen</span>
+                  <% } else { %>
+                    <span class="badge bg-success">Active</span>
+                  <% } %>
+                </p>
+                <div class="d-grid gap-2">
+                  <% if (admin.isBlocked) { %>
+                    <button type="button" class="btn btn-warning btn-sm unfreeze-btn" data-id="<%= admin._id %>">Unfreeze</button>
+                  <% } else { %>
+                    <button type="button" class="btn btn-secondary btn-sm freeze-btn" data-id="<%= admin._id %>">Freeze</button>
+                  <% } %>
+                  <form action="/superadmin/adminDelete/<%= admin._id %>" method="DELETE" onsubmit="return confirm('Delete this admin?');">
+                    <button type="submit" class="btn btn-danger btn-sm w-100">Delete</button>
+                  </form>
+                </div>
+              </article>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <div class="sa-card sa-empty">
+            <i class="fas fa-inbox"></i>
+            <h4>No Admins Found</h4>
+            <p>There are currently no admin accounts.</p>
+          </div>
+        <% } %>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.querySelectorAll('.freeze-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        if (!confirm('Are you sure you want to freeze this admin account?')) return;
+
+        const adminId = btn.getAttribute('data-id');
+        try {
+          const response = await fetch(`/superadmin/freezeAdmin/${adminId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          if (response.ok) {
+            alert('Admin account frozen successfully');
+            window.location.href = '/superadmin/getAllAdminDetails';
+          } else {
+            alert('Failed to freeze admin');
+          }
+        } catch (error) {
+          alert('An error occurred while freezing the admin');
+        }
+      });
+    });
+
+    document.querySelectorAll('.unfreeze-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        if (!confirm('Are you sure you want to unfreeze this admin account?')) return;
+
+        const adminId = btn.getAttribute('data-id');
+        try {
+          const response = await fetch(`/superadmin/unfreezeAdmin/${adminId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          if (response.ok) {
+            alert('Admin account unfrozen successfully');
+            window.location.href = '/superadmin/getAllAdminDetails';
+          } else {
+            alert('Failed to unfreeze admin');
+          }
+        } catch (error) {
+          alert('An error occurred while unfreezing the admin');
+        }
+      });
+    });
+
+    document.querySelectorAll('form').forEach(form => {
+      if (form.getAttribute('method') === 'DELETE') {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          if (!confirm('Are you sure you want to delete this admin?')) return;
+
+          const action = form.getAttribute('action');
+          try {
+            const response = await fetch(action, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            if (response.ok || response.status === 302) {
+              window.location.href = '/superadmin/getAllAdminDetails';
+            } else {
+              alert('Failed to delete admin');
+            }
+          } catch (error) {
+            alert('An error occurred while deleting the admin');
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
