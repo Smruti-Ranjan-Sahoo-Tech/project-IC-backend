@@ -2,6 +2,8 @@ const PostModel = require("../models/post.model");
 const CourseModel = require("../models/course.model");
 const UserModel = require("../models/user.model");
 const UserReviewPendingModel = require("../models/userReviewPending.model");
+const UserNotePendingModel = require("../models/userNotePending.model");
+const UserNoteModel = require("../models/userNote.model");
 const EmailService = require("../config/email.config.js");
 
 class UserController {
@@ -317,6 +319,230 @@ class UserController {
       });
     } catch (error) {
       console.error("getAllUserReviewsError:", error.message);
+      return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+  }
+  static async addNoteRequest(req,res){
+    try {
+      const { id, username, email, cource } = req.user;
+      const {
+        title = "",
+        company,
+        companyType,
+        location,
+        questionType,
+        subject
+      } = req.body;
+
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: "PDF file is required" });
+      }
+
+      if (!company || !companyType || !location || !questionType || !subject) {
+        return res.status(400).json({ success: false, message: "All note fields are required" });
+      }
+
+      if (!["MNC", "Startup", "Other"].includes(companyType)) {
+        return res.status(400).json({ success: false, message: "Invalid company type" });
+      }
+
+      if (!["Interview", "Coding", "Subjective"].includes(questionType)) {
+        return res.status(400).json({ success: false, message: "Invalid question type" });
+      }
+
+      const normalizedCompany = company.toString().trim();
+      const normalizedLocation = location.toString().trim();
+      const normalizedSubject = subject.toString().trim();
+      const normalizedTitle = title.toString().trim();
+
+      if (!normalizedCompany || !normalizedLocation || !normalizedSubject) {
+        return res.status(400).json({ success: false, message: "Company, location and subject are required" });
+      }
+
+      const courseData = await CourseModel.findOne({ course: cource }, { subjects: 1 }).lean();
+      if (!courseData) {
+        return res.status(404).json({ success: false, message: "Course not found" });
+      }
+
+      const approvedSubjectSet = new Set(
+        (courseData.subjects || [])
+          .filter((item) => {
+            const status = typeof item === "string" ? "approve" : item?.status;
+            return status === "approve";
+          })
+          .map((item) => {
+            const name = typeof item === "string" ? item : item?.name;
+            return name ? name.toString().trim().toLowerCase() : "";
+          })
+          .filter(Boolean)
+      );
+
+      if (!approvedSubjectSet.has(normalizedSubject.toLowerCase())) {
+        return res.status(400).json({ success: false, message: `Subject '${normalizedSubject}' is not approved for this course` });
+      }
+
+      const pdfUrl = req.file.path || req.file.secure_url || "";
+      const pdfPublicId = req.file.filename || req.file.public_id || "";
+
+      if (!pdfUrl || !pdfPublicId) {
+        return res.status(400).json({ success: false, message: "Uploaded PDF metadata is invalid" });
+      }
+
+      const pendingNote = await UserNotePendingModel.create({
+        title: normalizedTitle,
+        pdfUrl,
+        pdfPublicId,
+        pdfOriginalName: req.file.originalname || "",
+        questionType: questionType.toString().trim(),
+        cource,
+        subject: normalizedSubject,
+        company: normalizedCompany,
+        companyType,
+        location: normalizedLocation,
+        submittedBy: id,
+        submitterName: username,
+        submitterEmail: email
+      });
+
+      const superAdminEmail = process.env.S_ADMIN_EMAIL;
+      await EmailService(
+        superAdminEmail,
+        "New User Note Submission Pending Verification",
+        `<p>A user has submitted a new note.</p>
+         <ul>
+           <li><strong>User:</strong> ${username} (${email})</li>
+           <li><strong>Course:</strong> ${cource}</li>
+           <li><strong>Subject:</strong> ${normalizedSubject}</li>
+           <li><strong>Company:</strong> ${normalizedCompany}</li>
+         </ul>
+         <p>Please verify this note in SuperAdmin panel.</p>`
+      );
+
+      await EmailService(
+        email,
+        "Note Submitted - Pending Verification",
+        `<p>Dear ${username},</p>
+         <p>Your note has been submitted successfully and is currently under SuperAdmin verification.</p>
+         <ul>
+           <li><strong>Subject:</strong> ${normalizedSubject}</li>
+           <li><strong>Company:</strong> ${normalizedCompany}</li>
+           <li><strong>Status:</strong> Pending</li>
+         </ul>`
+      );
+
+      return res.status(201).json({
+        success: true,
+        message: "Note submitted and sent for verification",
+        note: pendingNote
+      });
+    } catch (error) {
+      console.error("addNoteRequestError:", error.message);
+      return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+  }
+
+  static async getNote(req,res){
+    try {
+      const { id } = req.user;
+
+      const [pendingNotes, approvedNotes] = await Promise.all([
+        UserNotePendingModel.find({ submittedBy: id })
+          .sort({ createdAt: -1 })
+          .lean(),
+        UserNoteModel.find({ writtenBy: id })
+          .sort({ createdAt: -1 })
+          .lean()
+      ]);
+
+      return res.status(200).json({
+        success: true,
+        pendingNotes,
+        approvedNotes
+      });
+    } catch (error) {
+      console.error("getNoteError:", error.message);
+      return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+  }
+
+  static async getAllUserNotes(req,res){
+    try {
+      const {
+        subject = "",
+        questionType = "",
+        companyType = "all",
+        company = "all",
+        location = "all",
+        page = 1,
+        limit = 10
+      } = req.query;
+
+      const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+      const limitNum = Math.max(parseInt(limit, 10) || 10, 1);
+      const skip = (pageNum - 1) * limitNum;
+
+      const normalizedCourse = (req.user?.cource || "").toString().trim();
+      if (!normalizedCourse) {
+        return res.status(400).json({ success: false, message: "Course is required" });
+      }
+
+      const userAuthors = await UserModel.find(
+        { role: "user", cource: normalizedCourse },
+        { _id: 1 }
+      ).lean();
+      const authorIds = userAuthors.map((item) => item._id);
+
+      if (!authorIds.length) {
+        return res.status(200).json({
+          success: true,
+          page: pageNum,
+          limit: limitNum,
+          total: 0,
+          totalPages: 0,
+          notes: []
+        });
+      }
+
+      const filter = {
+        writtenBy: { $in: authorIds },
+        cource: normalizedCourse
+      };
+
+      if (subject && subject !== "all") {
+        filter.subject = subject.toString().trim();
+      }
+      if (questionType && questionType !== "all") {
+        filter.questionType = questionType.toString().trim();
+      }
+      if (companyType && companyType !== "all") {
+        filter.companyType = companyType.toString().trim();
+      }
+      if (company && company !== "all") {
+        filter.company = company.toString().trim();
+      }
+      if (location && location !== "all") {
+        filter.location = { $regex: `^${location.toString().trim()}$`, $options: "i" };
+      }
+
+      const [notes, total] = await Promise.all([
+        UserNoteModel.find(filter)
+          .populate("writtenBy", "username email role")
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limitNum),
+        UserNoteModel.countDocuments(filter)
+      ]);
+
+      return res.status(200).json({
+        success: true,
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+        notes
+      });
+    } catch (error) {
+      console.error("getAllUserNotesError:", error.message);
       return res.status(500).json({ success: false, message: "Internal server error" });
     }
   }

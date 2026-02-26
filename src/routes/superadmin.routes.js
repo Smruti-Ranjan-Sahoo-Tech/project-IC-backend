@@ -55,6 +55,11 @@ router.get('/pending-user-reviews', requireSuperadmin, SuperadminController.pend
 router.get('/getPendingUserReviews', requireSuperadmin, SuperadminController.getPendingUserReviews);
 router.patch('/approveUserReview/:id', requireSuperadmin, SuperadminController.approveUserReview);
 router.delete('/rejectUserReview/:id', requireSuperadmin, SuperadminController.rejectUserReview);
+
+router.get('/pending-user-notes', requireSuperadmin, SuperadminController.pendingUserNotesPage);
+router.get('/getPendingUserNotes', requireSuperadmin, SuperadminController.getPendingUserNotes);
+router.patch('/approveUserNote/:id', requireSuperadmin, SuperadminController.approveUserNote);
+router.delete('/rejectUserNote/:id', requireSuperadmin, SuperadminController.rejectUserNote);
 router.get('/users', requireSuperadmin, SuperadminController.usersPage);
 router.post('/freezeUser/:id', requireSuperadmin, SuperadminController.freezeUser);
 router.post('/unfreezeUser/:id', requireSuperadmin, SuperadminController.unfreezeUser);

@@ -3,6 +3,8 @@ const UserModel = require("../models/user.model");
 const CourseModel = require("../models/course.model");
 const PostModel = require("../models/post.model");
 const UserReviewPendingModel = require("../models/userReviewPending.model");
+const UserNotePendingModel = require("../models/userNotePending.model");
+const UserNoteModel = require("../models/userNote.model");
 const EnquiryModel = require("../models/enquiry.model");
 const EmailService = require("../config/email.config.js");
 const generateToken = require("../utils/generateToken.js");
@@ -358,9 +360,10 @@ class SuperadminController {
 
     static async dashboardPage(req, res) {
         try {
-            const [pendingAdminRequestsCount, pendingUserReviewsCount, pendingSubjectCourses] = await Promise.all([
+            const [pendingAdminRequestsCount, pendingUserReviewsCount, pendingUserNotesCount, pendingSubjectCourses] = await Promise.all([
                 AdminAcessRequestModel.countDocuments(),
                 UserReviewPendingModel.countDocuments({ status: "pending" }),
+                UserNotePendingModel.countDocuments({ status: "pending" }),
                 CourseModel.find({ "subjects.status": { $in: ["pending", "delete_pending"] } }, { course: 1, subjects: 1 }).lean()
             ]);
 
@@ -370,6 +373,7 @@ class SuperadminController {
                 stats: {
                     pendingAdminRequestsCount,
                     pendingUserReviewsCount,
+                    pendingUserNotesCount,
                     pendingCourseSubjectsCount
                 }
             });
@@ -709,6 +713,170 @@ class SuperadminController {
             });
         } catch (error) {
             console.error("rejectUserReviewError:", error.message);
+            return res.status(500).json({
+                success: false,
+                message: "Internal server error"
+            });
+        }
+    }
+
+    static async getPendingUserNotes(req, res) {
+        try {
+            const filterEmail = (req.query?.submitterEmail || "").toString().trim().toLowerCase();
+            const filter = { status: "pending" };
+            if (filterEmail) {
+                filter.submitterEmail = filterEmail;
+            }
+
+            const notes = await UserNotePendingModel.find(filter)
+                .sort({ createdAt: -1 })
+                .lean();
+
+            return res.status(200).json({
+                success: true,
+                count: notes.length,
+                data: notes
+            });
+        } catch (error) {
+            console.error("getPendingUserNotesError:", error.message);
+            return res.status(500).json({
+                success: false,
+                message: "Internal server error"
+            });
+        }
+    }
+
+    static async pendingUserNotesPage(req, res) {
+        try {
+            const filterEmail = (req.query?.submitterEmail || "").toString().trim().toLowerCase();
+
+            const allPending = await UserNotePendingModel.find({ status: "pending" })
+                .sort({ createdAt: -1 })
+                .lean();
+
+            const submitters = Array.from(
+                new Map(
+                    allPending
+                        .filter((item) => item.submitterEmail)
+                        .map((item) => [
+                            item.submitterEmail.toLowerCase(),
+                            { name: item.submitterName || "Unknown User", email: item.submitterEmail }
+                        ])
+                ).values()
+            );
+
+            const notes = filterEmail
+                ? allPending.filter((item) => (item.submitterEmail || "").toLowerCase() === filterEmail)
+                : allPending;
+
+            return res.render("superadmin/pending-user-notes", {
+                data: notes,
+                submitters,
+                selectedSubmitterEmail: filterEmail
+            });
+        } catch (error) {
+            console.error("pendingUserNotesPageError:", error.message);
+            return res.status(500).render("superadmin/error", { message: "Internal server error" });
+        }
+    }
+
+    static async approveUserNote(req, res) {
+        try {
+            const { id } = req.params;
+            const pendingNote = await UserNotePendingModel.findOne({ _id: id, status: "pending" });
+
+            if (!pendingNote) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Pending note not found"
+                });
+            }
+
+            const note = await UserNoteModel.create({
+                title: pendingNote.title,
+                pdfUrl: pendingNote.pdfUrl,
+                pdfPublicId: pendingNote.pdfPublicId,
+                pdfOriginalName: pendingNote.pdfOriginalName,
+                questionType: pendingNote.questionType,
+                cource: pendingNote.cource,
+                subject: pendingNote.subject,
+                company: pendingNote.company,
+                companyType: pendingNote.companyType,
+                location: pendingNote.location,
+                writtenBy: pendingNote.submittedBy
+            });
+
+            await CourseModel.findOneAndUpdate(
+                { course: pendingNote.cource },
+                { $addToSet: { company: pendingNote.company } },
+                { upsert: true, new: true }
+            );
+
+            await UserNotePendingModel.deleteOne({ _id: pendingNote._id });
+
+            await EmailService(
+                pendingNote.submitterEmail,
+                "Note Approved and Published",
+                `<p>Dear ${pendingNote.submitterName},</p>
+                 <p>Your submitted note has been verified by SuperAdmin and published successfully.</p>
+                 <ul>
+                   <li><strong>Course:</strong> ${pendingNote.cource}</li>
+                   <li><strong>Subject:</strong> ${pendingNote.subject}</li>
+                   <li><strong>Company:</strong> ${pendingNote.company}</li>
+                 </ul>`
+            );
+
+            return res.status(200).json({
+                success: true,
+                message: "User note approved and published",
+                note
+            });
+        } catch (error) {
+            console.error("approveUserNoteError:", error.message);
+            return res.status(500).json({
+                success: false,
+                message: "Internal server error"
+            });
+        }
+    }
+
+    static async rejectUserNote(req, res) {
+        try {
+            const { id } = req.params;
+            const reason = (req.body?.reason || "").toString().trim();
+
+            const rejectedNote = await UserNotePendingModel.findOneAndUpdate(
+                { _id: id, status: "pending" },
+                { status: "rejected", rejectReason: reason },
+                { new: true }
+            );
+
+            if (!rejectedNote) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Pending note not found"
+                });
+            }
+
+            await EmailService(
+                rejectedNote.submitterEmail,
+                "Note Rejected by SuperAdmin",
+                `<p>Dear ${rejectedNote.submitterName},</p>
+                 <p>Your note submission was not approved by SuperAdmin.</p>
+                 <ul>
+                   <li><strong>Company:</strong> ${rejectedNote.company}</li>
+                   <li><strong>Subject:</strong> ${rejectedNote.subject}</li>
+                   <li><strong>Reason:</strong> ${reason || "Not specified"}</li>
+                 </ul>
+                 <p>You can submit a corrected note anytime.</p>`
+            );
+
+            return res.status(200).json({
+                success: true,
+                message: "User note rejected successfully"
+            });
+        } catch (error) {
+            console.error("rejectUserNoteError:", error.message);
             return res.status(500).json({
                 success: false,
                 message: "Internal server error"

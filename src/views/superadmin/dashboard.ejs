@@ -25,6 +25,7 @@
         <li class="sa-nav-item"><a class="sa-link" href="/superadmin/enquiries"><i class="fas fa-envelope-open-text"></i> Enquiries</a></li>
         <li class="sa-nav-item"><a class="sa-link" href="/superadmin/pending-course-subjects"><i class="fas fa-book-open"></i> Subject Requests</a></li>
         <li class="sa-nav-item"><a class="sa-link" href="/superadmin/pending-user-reviews"><i class="fas fa-star-half-alt"></i> User Reviews</a></li>
+        <li class="sa-nav-item"><a class="sa-link" href="/superadmin/pending-user-notes"><i class="fas fa-file-pdf"></i> User Notes</a></li>
         <li class="sa-nav-item"><a class="sa-link" href="/superadmin/logout"><i class="fas fa-right-from-bracket"></i> Logout</a></li>
       </ul>
     </aside>
@@ -58,6 +59,10 @@
             <p class="sa-kpi-value"><%= stats?.pendingUserReviewsCount || 0 %></p>
             <p class="sa-kpi-label mb-0">Pending User Reviews</p>
           </article>
+          <article class="sa-card">
+            <p class="sa-kpi-value"><%= stats?.pendingUserNotesCount || 0 %></p>
+            <p class="sa-kpi-label mb-0">Pending User Notes</p>
+          </article>
         </div>
 
         <div class="row g-3">
@@ -69,6 +74,7 @@
                 <a href="/superadmin/getAllAdminDetails" class="btn btn-outline-primary"><i class="fas fa-users me-1"></i> Open Admin Details</a>
                 <a href="/superadmin/pending-course-subjects" class="btn btn-outline-dark"><i class="fas fa-book me-1"></i> Subject Requests</a>
                 <a href="/superadmin/pending-user-reviews" class="btn btn-outline-success"><i class="fas fa-star me-1"></i> User Reviews</a>
+                <a href="/superadmin/pending-user-notes" class="btn btn-outline-secondary"><i class="fas fa-file-pdf me-1"></i> User Notes</a>
               </div>
 
               <div class="sa-bulk-actions mt-3">
