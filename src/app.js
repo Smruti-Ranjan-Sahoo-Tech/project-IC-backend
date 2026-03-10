@@ -20,11 +20,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(methodOverride('_method'));
 app.use(cookieParser());
-app.use(cors({
-    origin: process.env.CLIENT_URL,
-    credentials: true
-}));
 
+
+app.use(
+  cors({
+    origin: ["https://learningclub.netlify.app"],
+    methods: ["GET","POST","PUT","DELETE"],
+    credentials: true
+  })
+);
 // Routes
 app.use("/auth", authRouter);
 app.use("/user",userRouter)
