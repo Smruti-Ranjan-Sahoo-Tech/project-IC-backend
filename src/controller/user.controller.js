@@ -180,6 +180,7 @@ class UserController {
       const pendingReviews = await UserReviewPendingModel.insertMany(docsToCreate);
 
       const superAdminEmail = process.env.S_ADMIN_EMAIL;
+      const superadminUrl = process.env.SUPERADMIN_DASHBOARD_URL || "http://localhost:5000/superadmin/admin-requests";
       await EmailService(
         superAdminEmail,
         "New User Review Submission Pending Verification",
@@ -192,7 +193,8 @@ class UserController {
            <li><strong>Location:</strong> ${normalizedLocation}</li>
            <li><strong>Total Questions:</strong> ${pendingReviews.length}</li>
          </ul>
-         <p>Please verify this review in SuperAdmin panel.</p>`
+         <p>Please verify this review in SuperAdmin panel.</p>
+         <p><a href="${superadminUrl}">${superadminUrl}</a></p>`
       );
 
       await EmailService(
@@ -405,6 +407,7 @@ class UserController {
       });
 
       const superAdminEmail = process.env.S_ADMIN_EMAIL;
+      const superadminUrl = process.env.SUPERADMIN_DASHBOARD_URL || "http://localhost:5000/superadmin/admin-requests";
       await EmailService(
         superAdminEmail,
         "New User Note Submission Pending Verification",
@@ -415,7 +418,8 @@ class UserController {
            <li><strong>Subject:</strong> ${normalizedSubject}</li>
            <li><strong>Company:</strong> ${normalizedCompany}</li>
          </ul>
-         <p>Please verify this note in SuperAdmin panel.</p>`
+         <p>Please verify this note in SuperAdmin panel.</p>
+         <p><a href="${superadminUrl}">${superadminUrl}</a></p>`
       );
 
       await EmailService(

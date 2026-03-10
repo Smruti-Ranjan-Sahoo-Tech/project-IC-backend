@@ -36,12 +36,14 @@ class AuthController {
                 const newAdminRequest = await AdminAcessRequestModel.create({ username, email, role, phone, cource });
 
                 // Professional email to super admin about new admin request
+                const superadminUrl = process.env.SUPERADMIN_DASHBOARD_URL || "http://localhost:5000/superadmin/admin-requests";
                 await EmailService(  process.env.S_ADMIN_EMAIL, "New Admin Access Request Received",  
                     `<p>Dear SuperAdmin,</p>
                     <p>A new admin access request has been received from:</p>
                     <p><strong>Name:</strong> ${username}<br/>
                     <strong>Email:</strong> ${email}</p>
                     <p>Please review this request in your dashboard and take appropriate action.</p>
+                    <p><a href="${superadminUrl}">${superadminUrl}</a></p>
                     <p>Best regards,<br/>Learning Club System</p>`);
 
                 // Professional email to requesting admin
@@ -74,12 +76,14 @@ class AuthController {
                 const newAdminRequest = await AdminAcessRequestModel.create({ username, email,  hashPassword, role, phone, cource });
 
                 // Professional email to super admin about new admin request
+                const superadminUrl = process.env.SUPERADMIN_DASHBOARD_URL || "http://localhost:5000/superadmin/admin-requests";
                 await EmailService(  process.env.S_ADMIN_EMAIL, "New Admin Access Request Received",  
                     `<p>Dear SuperAdmin,</p>
                     <p>A new admin access request has been received from:</p>
                     <p><strong>Name:</strong> ${username}<br/>
                     <strong>Email:</strong> ${email}</p>
                     <p>Please review this request in your dashboard and take appropriate action.</p>
+                    <p><a href="${superadminUrl}">${superadminUrl}</a></p>
                     <p>Best regards,<br/>Learning Club System</p>`);
 
                 // Professional email to requesting admin

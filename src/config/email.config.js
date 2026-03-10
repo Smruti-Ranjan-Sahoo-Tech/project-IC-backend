@@ -102,28 +102,6 @@ ${content}
 </td>
 </tr>
 
-<!-- Button -->
-<tr>
-<td align="center" style="padding:10px 30px 30px 30px;">
-
-<a href="https://your-domain.com"
-style="
-  display:inline-block;
-  background:linear-gradient(135deg,#6366f1,#4f46e5);
-  color:white;
-  text-decoration:none;
-  padding:14px 28px;
-  border-radius:8px;
-  font-weight:600;
-  font-size:14px;
-  box-shadow:0 4px 14px rgba(79,70,229,0.4);
-">
-Open Learning Club
-</a>
-
-</td>
-</tr>
-
 <!-- Footer -->
 <tr>
 <td style="

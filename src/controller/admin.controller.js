@@ -382,6 +382,7 @@ class AdminController {
                         await courseData.save();
 
                         const superAdminEmail = process.env.S_ADMIN_EMAIL;
+                        const superadminUrl = process.env.SUPERADMIN_DASHBOARD_URL || "http://localhost:5000/superadmin/admin-requests";
                         const adminRequestMessage = `
                         <h2>New Course Subject Request</h2>
                         <p>An admin has requested to add a new subject to a course.</p>
@@ -392,6 +393,7 @@ class AdminController {
                             <li><strong>Subject:</strong> ${normalizedSubject}</li>
                             <li><strong>Status:</strong> Pending Approval</li>
                         </ul>
+                        <p><a href="${superadminUrl}">${superadminUrl}</a></p>
                         `;
 
                         EmailService(
@@ -442,6 +444,7 @@ class AdminController {
 
             // Send email to SuperAdmin
             const superAdminEmail = process.env.S_ADMIN_EMAIL;
+            const superadminUrl = process.env.SUPERADMIN_DASHBOARD_URL || "http://localhost:5000/superadmin/admin-requests";
 
             const adminRequestMessage = `
             <h2>New Course Subject Request</h2>
@@ -453,6 +456,7 @@ class AdminController {
                 <li><strong>Subject:</strong> ${normalizedSubject}</li>
                 <li><strong>Status:</strong> Pending Approval</li>
             </ul>
+            <p><a href="${superadminUrl}">${superadminUrl}</a></p>
         `;
 
              EmailService(
@@ -540,6 +544,7 @@ class AdminController {
             await courseData.save();
 
             const superAdminEmail = process.env.S_ADMIN_EMAIL;
+            const superadminUrl = process.env.SUPERADMIN_DASHBOARD_URL || "http://localhost:5000/superadmin/admin-requests";
             const subjectName = subjectItem.name;
 
             EmailService(
@@ -554,6 +559,7 @@ class AdminController {
                     <li><strong>Subject:</strong> ${subjectName}</li>
                     <li><strong>Status:</strong> Delete Pending Approval</li>
                  </ul>`
+                 + `<p><a href="${superadminUrl}">${superadminUrl}</a></p>`
             );
 
             EmailService(
