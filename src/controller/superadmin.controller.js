@@ -36,9 +36,11 @@ class SuperadminController {
             password === process.env.SUPERADMIN_PASSWORD
         ) {
             const token = generateToken({ email, role: "superadmin" });
+            const isProd = process.env.NODE_ENV === "production";
             res.cookie("token", token, {
                 httpOnly: true,
-                sameSite: "strict",
+                sameSite: isProd ? "none" : "lax",
+                secure: isProd,
                 maxAge: 24 * 60 * 60 * 1000 // 1 day
             });
             return res.redirect("/superadmin/admin-requests");

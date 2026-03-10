@@ -10,6 +10,7 @@ const methodOverride = require('method-override');
 const app=express()
 const cookieParser = require("cookie-parser");
 
+app.set('trust proxy', 1);
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
