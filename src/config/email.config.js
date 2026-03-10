@@ -1,15 +1,31 @@
 const nodemailer = require("nodemailer");
 
-// Create transporter
+const emailUser = process.env.GOOGLE_APP_EMAIL;
+const emailPass = process.env.GOOGLE_APP_PASSWORD;
+
+if (!emailUser || !emailPass) {
+  console.warn("Email credentials missing: set GOOGLE_APP_EMAIL and GOOGLE_APP_PASSWORD");
+}
+
+// Create transporter (Gmail App Password)
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
   auth: {
-    user: process.env.GOOGLE_APP_EMAIL,
-    pass: process.env.GOOGLE_APP_PASSWORD,
+    user: emailUser,
+    pass: emailPass,
   },
 });
 
-console.log("Email Service Loaded");
+// Verify transporter at startup
+transporter.verify((err, success) => {
+  if (err) {
+    console.error("Email transporter verification failed:", err.message);
+  } else {
+    console.log("Email Service Ready");
+  }
+});
 
 
 // Professional Premium Email Template
