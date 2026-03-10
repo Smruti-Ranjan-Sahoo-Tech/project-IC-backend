@@ -323,7 +323,7 @@ class UserController {
       console.error("getAllUserReviewsError:", error.message);
       return res.status(500).json({ success: false, message: "Internal server error" });
     }
-  }
+0  }
   static async addNoteRequest(req,res){
     try {
       const { id, username, email, cource } = req.user;
