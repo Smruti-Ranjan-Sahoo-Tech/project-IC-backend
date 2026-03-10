@@ -141,6 +141,7 @@ class AuthController {
                 httpOnly: true,
                 secure: isProd,
                 sameSite: isProd ? "none" : "lax",
+                path: "/",
                 maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
             });
             console.timeEnd('login')
@@ -156,7 +157,14 @@ class AuthController {
 
     static async logout(req, res) {
         try {
-            res.clearCookie("token");
+            const isProd = process.env.NODE_ENV === "production";
+            // Must match the attributes used when issuing the cookie so browsers will actually delete it
+            res.clearCookie("token", {
+                httpOnly: true,
+                secure: isProd,
+                sameSite: isProd ? "none" : "lax",
+                path: "/"
+            });
             return res.status(200).json({ message: "Logged out" });
         } catch (error) {
             console.log("logoutError:", error.message);
