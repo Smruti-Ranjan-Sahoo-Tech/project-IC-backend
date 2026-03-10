@@ -24,7 +24,7 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: "https://project-ic-backend.onrender.com",
+    origin: "https://learningclub.netlify.app",
     credentials: true
   })
 );
