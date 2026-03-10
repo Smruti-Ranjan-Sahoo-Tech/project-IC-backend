@@ -42,14 +42,14 @@ class AuthController {
                     <p><strong>Name:</strong> ${username}<br/>
                     <strong>Email:</strong> ${email}</p>
                     <p>Please review this request in your dashboard and take appropriate action.</p>
-                    <p>Best regards,<br/>Project-IC System</p>`);
+                    <p>Best regards,<br/>Learning Club System</p>`);
 
                 // Professional email to requesting admin
                 await EmailService(email,"Admin Application Under Review", 
                     `<p>Dear ${username},</p>
                     <p>Thank you for submitting your admin account request. Your application has been received and is currently under review by our SuperAdministrator.</p>
                     <p>We will notify you via email once your request has been processed. Please wait for our confirmation email which will contain your account setup instructions.</p>
-                    <p>Best regards,<br/>Project-IC Team</p>`);
+                    <p>Best regards,<br/>Learning Club Team</p>`);
 
                 return res.status(202).json({ message: "Your admin request is under review", newAdminRequest });
             }
@@ -80,14 +80,14 @@ class AuthController {
                     <p><strong>Name:</strong> ${username}<br/>
                     <strong>Email:</strong> ${email}</p>
                     <p>Please review this request in your dashboard and take appropriate action.</p>
-                    <p>Best regards,<br/>Project-IC System</p>`);
+                    <p>Best regards,<br/>Learning Club System</p>`);
 
                 // Professional email to requesting admin
                 await EmailService(email,"Admin Application Under Review", 
                     `<p>Dear ${username},</p>
                     <p>Thank you for submitting your admin account request. Your application has been received and is currently under review by our SuperAdministrator.</p>
                     <p>We will notify you via email once your request has been processed. Please wait for our confirmation email which will contain your account setup instructions.</p>
-                    <p>Best regards,<br/>Project-IC Team</p>`);
+                    <p>Best regards,<br/>Learning Club Team</p>`);
 
                 return res.status(202).json({ message: "Your admin request is under review", newAdminRequest });
             }
@@ -98,10 +98,10 @@ class AuthController {
             // professional email to user
             await EmailService( email, "Registration Successful",
                 `<p>Dear ${username},</p>
-                <p>Welcome to project-ic! Your account has been successfully created.</p>
+                <p>Welcome to Learning Club! Your account has been successfully created.</p>
                 <p>You can now log in to your account using your email and password.</p>
                 <p>If you have any questions or need assistance, please contact our support team.</p>
-                <p>Best regards,<br/>Project-IC Team</p>`  );
+                <p>Best regards,<br/>Learning Club Team</p>`  );
 
             return res.status(201).json({ message: "User registered successfully" });
 
@@ -166,12 +166,11 @@ class AuthController {
             const user = await UserModel.findOne({ email });
             if (!user) return res.status(404).json({ message: "No account with that email" });
 
-            const token = jwt.sign({ id: user._id }, process.env.JWT_SERVER_SECREAT, { expiresIn: "1h" });
-            console.log("forgotPaaword data:",process.env.CLIENT_URL)
-            const resetUrl = `http://localhost:5173/reset-password?token=${token}`;
-            console.log(resetUrl)
+            const token = jwt.sign({ id: user._id }, process.env.JWT_SERVER_SECREAT, { expiresIn: "30m" });
+            const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+            const resetUrl = `${clientUrl}/reset-password?token=${token}`;
 
-             EmailService(email, "Password Reset", `<p>Hello ${user.username},</p><p>Click <a href=\"${resetUrl}\">here</a> to reset your password. The link expires in 1 hour.</p>`);
+             EmailService(email, "Password Reset", `<p>Hello ${user.username},</p><p>Click <a href=\"${resetUrl}\">here</a> to reset your password. The link expires in 30 minutes.</p>`);
 
             return res.status(200).json({ message: "Password reset link sent to email" });
         } catch (error) {

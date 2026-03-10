@@ -53,7 +53,7 @@ style="
 ">
 
 <div style="font-size:24px;font-weight:700;letter-spacing:0.5px;">
-Project-IC
+Learning Club
 </div>
 
 <div style="
@@ -118,7 +118,7 @@ style="
   font-size:14px;
   box-shadow:0 4px 14px rgba(79,70,229,0.4);
 ">
-Open Project-IC
+Open Learning Club
 </a>
 
 </td>
@@ -137,7 +137,7 @@ Open Project-IC
   color:#6b7280;
   margin-bottom:10px;
 ">
-© ${new Date().getFullYear()} Project-IC. All rights reserved.
+© ${new Date().getFullYear()} Learning Club. All rights reserved.
 </div>
 
 <div style="
@@ -168,7 +168,7 @@ This is an automated email. Please do not reply.
 const EmailService = async (email, subject_text, message) => {
 
   const mailOptions = {
-    from: `"Project-IC Team" <${process.env.GOOGLE_APP_EMAIL}>`,
+    from: `"Learning Club Team" <${process.env.GOOGLE_APP_EMAIL}>`,
     to: email,
     subject: subject_text,
 
