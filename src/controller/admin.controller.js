@@ -236,11 +236,11 @@ class AdminController {
                 inactiveUsers,
                 lastMonthRegistrations
             ] = await Promise.all([
-                UserModel.countDocuments(),
-                UserModel.countDocuments({ cource: cource }),
-                UserModel.countDocuments({ isBlocked: false, cource: cource }),
-                UserModel.countDocuments({ isBlocked: true, cource: cource }),
-                UserModel.countDocuments({ createdAt: { $gte: oneMonthAgo }, cource: cource })
+                UserModel.countDocuments({ role: "user" }),
+                UserModel.countDocuments({ cource: cource, role: "user" }),
+                UserModel.countDocuments({ isBlocked: false, cource: cource, role: "user" }),
+                UserModel.countDocuments({ isBlocked: true, cource: cource, role: "user" }),
+                UserModel.countDocuments({ createdAt: { $gte: oneMonthAgo }, cource: cource, role: "user" })
             ]);
 
             return res.status(200).json({
